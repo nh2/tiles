@@ -35,9 +35,13 @@ data World = World
   }
 
 
+emptyTileColor :: Color
+emptyTileColor = makeColor 0.1 0.1 0.1 1
+
+
 initWorld :: World
 initWorld = World
-  { tiles = V.replicate _N (V.replicate _N (Small, makeColor 0.1 0.1 0.1 1))
+  { tiles = V.replicate _N (V.replicate _N (Small, emptyTileColor))
   , winSize = initWinSize
   , hover = (0, 0)
   , tileColor = makeColor 1 0 0 1
@@ -96,9 +100,10 @@ event :: Event -> World -> World
 event ev world = case ev of
   EventMotion (topleft world -> (x, y)) -> world{ hover = (tileOf x, tileOf y) }
   EventResize (x, y) -> world{ winSize = (x, y) }
-  EventKey (Char 'r') Down _ _ -> world{ tileColor = makeColor 1 0 0 1 }
-  EventKey (Char 'g') Down _ _ -> world{ tileColor = makeColor 0.1 0.1 0.1 1 }
-  EventKey (Char 'w') Down _ _ -> world{ tileColor = makeColor 0.9 0.9 0.9 1 }
+  EventKey (Char 'r') Down _ _ -> world{ tileColor = makeColor 0.8627 0.1843 0.17647 1 }
+  EventKey (Char 'g') Down _ _ -> world{ tileColor = makeColor 0.427 0.427 0.427 1 }
+  EventKey (Char 'w') Down _ _ -> world{ tileColor = makeColor 0.9450 0.9333 0.796 1 }
+  EventKey (Char '\b') Down _ _ -> world{ tileColor = emptyTileColor }
   EventKey (Char '\SUB') Down (Modifiers -- Not sure why gloss gives me \SUB and not 'z'
                                 { ctrl  = Down
                                 , shift = Up
