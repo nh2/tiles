@@ -17,6 +17,10 @@ tileSize = 20
 tileDiff :: Int
 tileDiff = tileSize + 1
 
+_UNDO_STEPS :: Int
+_UNDO_STEPS = 20
+
+
 initWinSize :: (Int, Int)
 initWinSize = (_N * tileDiff, _N * tileDiff)
 
@@ -27,6 +31,7 @@ data World = World
   , hover :: (Int, Int)
   , tileColor :: Color
   , tileType :: TileType
+  , undoHist :: [World]
   }
 
 
@@ -37,6 +42,7 @@ initWorld = World
   , hover = (0, 0)
   , tileColor = makeColor 1 0 0 1
   , tileType = Small
+  , undoHist = []
   }
 
 
@@ -93,6 +99,12 @@ event ev world = case ev of
   EventKey (Char 'r') Down _ _ -> world{ tileColor = makeColor 1 0 0 1 }
   EventKey (Char 'g') Down _ _ -> world{ tileColor = makeColor 0.1 0.1 0.1 1 }
   EventKey (Char 'w') Down _ _ -> world{ tileColor = makeColor 0.9 0.9 0.9 1 }
+  EventKey (Char '\SUB') Down (Modifiers -- Not sure why gloss gives me \SUB and not 'z'
+                                { ctrl  = Down
+                                , shift = Up
+                                , alt   = Up
+                                }) _
+                               -> head $ undoHist world ++ [world]
   EventKey (Char '1') Down _ _ -> world{ tileType = Small }
   EventKey (Char '3') Down _ _ -> world{ tileType = Big (0, 0) }
   EventKey (MouseButton LeftButton) Down _ (topleft world -> (x, y)) ->
@@ -119,7 +131,8 @@ event ev world = case ev of
                 , let i' = bi - bdi + di
                 , let j' = bj - bdj + dj
                 ]
-    in world{ tiles = ts /// split /// new }
+    in world{ tiles = ts /// split /// new
+            , undoHist = take _UNDO_STEPS $ world : undoHist world }
   _ -> world
   where
     clamp n = max 0 . min (_N - 1) $ n
