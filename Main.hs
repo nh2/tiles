@@ -99,27 +99,27 @@ event ev world = case ev of
     let i = tileOf x
         j = tileOf y
         ts = tiles world
-    in case tileType world of
-         Small -> world{ tiles = ts // [(i, ts ! i // [(j, (Small, tileColor world))])] }
-         Big _
-           | 1 <= i          && 1 <= j &&
-                  i < _N - 1 &&      j < _N - 1 ->
-             -- ^ bounds check: must not be an outermost 1-tile
-             let big = [ (i+di, j+dj, (Big (di, dj), tileColor world))
-                       | di <- [-1,0,1]
-                       , dj <- [-1,0,1]
-                       ]
-                 split = [ (i', j', (Small, col))
-                         | (bi, bj, (Big _, _)) <- big
-                         , (Big (bdi, bdj), col) <- [ts ! bi ! bj]
-                         , di <- [-1,0,1]
-                         , dj <- [-1,0,1]
-                         , let i' = bi - bdi + di
-                         , let j' = bj - bdj + dj
-                         , abs (i - i') > 1 || abs (j - j') > 1 -- don't split ourselves
-                         ]
-             in world{ tiles = ts /// big /// split }
-           | otherwise -> world
+        new = case tileType world of
+          Small -> [(i, j, (Small, tileColor world))]
+          Big _
+            | 1 <= i          && 1 <= j &&
+                   i < _N - 1 &&      j < _N - 1 ->
+              -- ^ bounds check: must not be an outermost 1-tile
+                [ (i+di, j+dj, (Big (di, dj), tileColor world))
+                | di <- [-1,0,1]
+                , dj <- [-1,0,1]
+                ]
+            | otherwise -> []
+
+        split = [ (i', j', (Small, col))
+                | (bi, bj, _) <- new
+                , (Big (bdi, bdj), col) <- [ts ! bi ! bj]
+                , di <- [-1,0,1]
+                , dj <- [-1,0,1]
+                , let i' = bi - bdi + di
+                , let j' = bj - bdj + dj
+                ]
+    in world{ tiles = ts /// split /// new }
   _ -> world
   where
     tileOf pix = pix `quot` tileDiff
