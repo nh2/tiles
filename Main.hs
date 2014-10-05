@@ -59,9 +59,9 @@ asciiWorld world =
 
 
 render :: World -> Picture
-render World{ tiles, hover, tileType } =
+render World{ tiles, hover, tileType, winSize = (wx, wy) } =
   -- Translate from Gloss's "0,0 is center" to "0,0 is bottom left corner"
-  Translate (fi (-(_N - 1) * tileDiff) / 2) (fi (-(_N - 1) * tileDiff) / 2)
+  Translate (fi (tileDiff - wx) / 2) (fi (tileDiff - wy) / 2)
     . Pictures
     . (++ [renderTile hover (tileType, makeColor 1 1 0 1)])
     . concat
