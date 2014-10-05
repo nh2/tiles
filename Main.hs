@@ -3,6 +3,7 @@
 
 module Main where
 
+import           Control.Applicative
 import           Control.Exception
 import qualified Data.ByteString as BS
 import           Data.List
@@ -12,6 +13,7 @@ import           Data.SafeCopy
 import           Data.Serialize.Get (runGet)
 import           Data.Serialize.Put (runPut)
 import           Graphics.Gloss.Interface.IO.Game hiding (Vector)
+import           Options.Applicative
 import           System.IO
 
 
@@ -46,8 +48,8 @@ emptyTileColor :: Color
 emptyTileColor = makeColor 0.1 0.1 0.1 1
 
 
-initWorld :: World
-initWorld = World
+emptyWorld :: World
+emptyWorld = World
   { tiles = V.replicate _N (V.replicate _N (Small, emptyTileColor))
   , winSize = initWinSize
   , hover = (0, 0)
@@ -205,8 +207,38 @@ step :: Float -> World -> World
 step _time _world = error "shouldn't be called since we set the step time to 0 in `play`"
 
 
+-- | Command line arguments to this program.
+data Opts = Opts
+  { optsLoadFile :: Maybe String
+  } deriving (Eq, Ord, Show)
+
+
+-- | Command line argument parser.
+optsParser :: Parser Opts
+optsParser = Opts
+  <$> optional (strOption
+        ( long "load"
+          <> metavar "SAVE_FILE"
+          <> help "Loads a saved file"
+        )
+      )
+
+
 main :: IO ()
-main =
+main = do
+  Opts
+    { optsLoadFile
+    } <- execParser $ info (helper <*> optsParser)
+           ( fullDesc
+               <> progDesc "Small Haskell gloss aplication to try out floor tile designs"
+           )
+
+  initWorld <- case optsLoadFile of
+    Nothing -> return emptyWorld
+    Just path -> loadFrom path >>= \case
+      Left err -> hPutStrLn stderr err >> return emptyWorld
+      Right Save{ saveWorld = w } -> return w
+
   playIO
     (InWindow "Tiles" initWinSize (0, 0))
     (makeColor 0 0 0 1)
