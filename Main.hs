@@ -122,7 +122,8 @@ event ev world = case ev of
     in world{ tiles = ts /// split /// new }
   _ -> world
   where
-    tileOf pix = pix `quot` tileDiff
+    clamp n = max 0 . min (_N - 1) $ n
+    tileOf pix = clamp $ pix `quot` tileDiff
 
 
 (///) :: Vector (Vector a) -> [(Int, Int, a)] -> Vector (Vector a)
